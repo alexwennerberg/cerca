@@ -28,7 +28,7 @@
 			<em>(edited {{ $post.Publish | formatDateRelative }})</em></span>
 			{{ end }}
         </section>
-        {{ $post.Content }}
+        {{ $post.Content | markup }}
     </article>
     {{ end }}
     {{ if .LoggedIn }}

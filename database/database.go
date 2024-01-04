@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/url"
 	"os"
@@ -179,7 +178,7 @@ type Post struct {
 	ID          int
 	ThreadTitle string
 	ThreadID    int
-	Content     template.HTML
+	Content     string // markdown
 	Author      string
 	AuthorID    int
 	Publish     time.Time

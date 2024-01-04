@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -90,7 +89,7 @@ type ThreadData struct {
 
 type EditPostData struct {
 	Title   string
-	Content template.HTML
+	Content string
 }
 
 type RequestHandler struct {
@@ -213,6 +212,7 @@ func generateTemplates(config types.Config, translator i18n.Translator) (*templa
 			return translator.TranslateWithData(key, i18n.TranslationData{data})
 		},
 		"capitalize": util.Capitalize,
+		"markup":     util.Markup,
 		"tohtml": func(s string) template.HTML {
 			// use of this function is risky cause it interprets the passed in string and renders it as unescaped html.
 			// can allow for attacks!
@@ -312,16 +312,6 @@ func (h *RequestHandler) ThreadRoute(res http.ResponseWriter, req *http.Request)
 	// TODO (2022-01-07):
 	// * handle error
 	thread := h.db.GetThread(threadid)
-	pattern := regexp.MustCompile("<img")
-	// markdownize content (but not title)
-	for i, post := range thread {
-		content := []byte(util.Markup(post.Content))
-		// make sure images are lazy loaded
-		if pattern.Match(content) {
-			content = pattern.ReplaceAll(content, []byte(`<img loading="lazy"`))
-		}
-		thread[i].Content = template.HTML(content)
-	}
 	data := ThreadData{Posts: thread, ThreadURL: req.URL.Path}
 	view := TemplateData{Data: &data, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid}
 	if len(thread) > 0 {
@@ -686,8 +676,8 @@ func (h RequestHandler) RegisterRoute(res http.ResponseWriter, req *http.Request
 		return
 	}
 
-	rules := util.Markup(template.HTML(h.files["rules"]))
-	verification := util.Markup(template.HTML(h.files["verification-instructions"]))
+	rules := util.Markup(string(h.files["rules"]))
+	verification := util.Markup(string(h.files["verification-instructions"]))
 	conduct := h.config.Community.ConductLink
 	var verificationCode string
 	renderErr := func(errFmt string, args ...interface{}) {
@@ -806,7 +796,7 @@ func (h RequestHandler) GenericRoute(res http.ResponseWriter, req *http.Request)
 
 func (h RequestHandler) AboutRoute(res http.ResponseWriter, req *http.Request) {
 	loggedIn, _ := h.IsLoggedIn(req)
-	input := util.Markup(template.HTML(h.files["about"]))
+	input := util.Markup(string(h.files["about"]))
 	h.renderView(res, "about-template", TemplateData{Data: input, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("About")})
 }
 
@@ -929,13 +919,9 @@ func (h *RequestHandler) EditPostRoute(res http.ResponseWriter, req *http.Reques
 	case "POST":
 		content := req.PostFormValue("content")
 		h.db.EditPost(content, postid)
-		http.Redirect(res, req, "/"+slug, http.StatusSeeOther)
-		IndexRedirect(res, req) // TODO thread redirect
+		post.Content = content
 	}
-	data := EditPostData{
-		Content: post.Content,
-	}
-	view := TemplateData{Data: data, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid}
+	view := TemplateData{Data: post, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid}
 	h.renderView(res, "edit-post", view)
 
 }

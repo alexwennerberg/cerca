@@ -1,6 +1,8 @@
 {{ template "head" . }}
 <main>
-	<h1>{{ "PostEdit" | translate }}</h1>
+	<h1>{{ "PostEdit" | translate }} {{.Data.ID}}</h1>
+	<article>{{.Data.Content | markup }}
+	</article>
     <form method="POST">
         <div class="post-container" >
             <label for="content">{{ "Content" | translate }}:</label>
