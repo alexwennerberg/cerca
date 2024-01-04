@@ -88,6 +88,11 @@ type ThreadData struct {
 	ThreadURL string
 }
 
+type EditPostData struct {
+	Title   string
+	Content template.HTML
+}
+
 type RequestHandler struct {
 	db         *database.DB
 	session    *session.Session
@@ -223,6 +228,7 @@ func generateTemplates(config types.Config, translator i18n.Translator) (*templa
 		"footer",
 		"generic-message",
 		"head",
+		"edit-post",
 		"index",
 		"login",
 		"login-component",
@@ -908,6 +914,32 @@ func (h *RequestHandler) DeletePostRoute(res http.ResponseWriter, req *http.Requ
 	http.Redirect(res, req, threadURL, http.StatusSeeOther)
 }
 
+func (h *RequestHandler) EditPostRoute(res http.ResponseWriter, req *http.Request) {
+	postid, ok := util.GetURLPortion(req, 3)
+	loggedIn, userid := h.IsLoggedIn(req)
+
+	// TODO 404
+	fmt.Println(postid, ok)
+
+	post, _ := h.db.GetPost(postid)
+	if !loggedIn || userid != post.AuthorID {
+		// unauth error
+	}
+	switch req.Method {
+	case "POST":
+		content := req.PostFormValue("content")
+		h.db.EditPost(content, postid)
+		http.Redirect(res, req, "/"+slug, http.StatusSeeOther)
+		IndexRedirect(res, req) // TODO thread redirect
+	}
+	data := EditPostData{
+		Content: post.Content,
+	}
+	view := TemplateData{Data: data, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid}
+	h.renderView(res, "edit-post", view)
+
+}
+
 func Serve(allowlist []string, sessionKey string, isdev bool, dir string, conf types.Config) {
 	port := ":8272"
 
@@ -1000,6 +1032,7 @@ func NewServer(allowlist []string, sessionKey, dir string, config types.Config) 
 	s.ServeMux.HandleFunc("/login", handler.LoginRoute)
 	s.ServeMux.HandleFunc("/register", handler.RegisterRoute)
 	s.ServeMux.HandleFunc("/post/delete/", handler.DeletePostRoute)
+	s.ServeMux.HandleFunc("/post/edit/", handler.EditPostRoute)
 	s.ServeMux.HandleFunc("/thread/new/", handler.NewThreadRoute)
 	s.ServeMux.HandleFunc("/thread/", handler.ThreadRoute)
 	s.ServeMux.HandleFunc("/robots.txt", handler.RobotsRoute)
