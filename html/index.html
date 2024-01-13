@@ -1,4 +1,5 @@
 {{ template "head" . }}
+<<<<<<< Updated upstream
 <main>
     {{ if len .Data.Threads | eq 0 }} 
     <p> There are currently no threads. </p>
@@ -7,9 +8,30 @@
     <h2><a href="{{$thread.Slug}}">{{ $thread.Title }}</a></h2>
     {{ end }}
 </main>
+=======
+>>>>>>> Stashed changes
 {{ if .LoggedIn }}
 <aside>
-    <p> <a href="/thread/new">{{ "ThreadStartNew" | translate }}</a></p>
+    <p> <a style="float: right;" href="/thread/new">{{ "ThreadStartNew" | translate }}</a></p>
 </aside>
 {{ end }}
+
+<main>
+  <table id="threads">
+    <tr>
+      <th>Thread</th>
+      <th>Author</th>
+	  <th>Replies</th>
+      <th>Latest</th>
+    </tr>
+	{{ range $index, $thread := .Data.Threads }}
+    <tr>
+      <td><b><a href="{{$thread.Slug}}">{{ $thread.Title }}</a></b>
+      </td>
+	  <td>{{$thread.Author}}</td>
+      <td>{{$thread.ReplyCount}}</td>
+      <td>{{$thread.LastPostAuthor}} <a href="{{$thread.LastPostSlug}}">{{$thread.Publish | formatDateTimeRelative }} </a></td>
+	{{ end }}
+  </table>
+</main>
 {{ template "footer" . }}

@@ -404,7 +404,7 @@ func GenerateRSS(db *database.DB, config types.Config) string {
 		fulltime := t.Publish.Format(rfc822RSS)
 		date := t.Publish.Format("2006-01-02")
 		posturl := joinPath(config.RSS.URL, fmt.Sprintf("%s#%d", t.Slug, t.PostID))
-		entry := rss.OutputRSSItem(fulltime, t.Title, fmt.Sprintf("[%s] %s posted", date, t.Author), posturl)
+		entry := rss.OutputRSSItem(fulltime, t.Title, fmt.Sprintf("[%s] %s posted", date, t.LastPostAuthor), posturl)
 		entries[i] = entry
 	}
 	feedName := config.RSS.Name
