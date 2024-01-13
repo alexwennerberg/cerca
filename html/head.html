@@ -45,6 +45,11 @@
 				padding: 0;
                 grid-column-gap: 0.5rem;
 			}
+            #threads {
+              width: 100%
+            }
+            #threads tr:nth-child(even) td{ background-color: #dfdfdf; }
+            #threads th { background-color: black; color: white;}
             li { margin-bottom: 0rem; }
             ul { padding-left: 1rem; }
             h1, h2 { margin-bottom: 1rem; }
@@ -52,8 +57,11 @@
             blockquote { padding-left: 1rem; border-left-style: solid;; border-left-width: 3px; }
             div { margin-bottom: 2rem; }
             textarea { min-height: 10rem; }
-            article > section { margin-bottom: 0.5rem; }
-            article { margin-bottom: 2rem; }
+            article > section { margin-bottom: 0.2rem; }
+            .post { border: 1px solid black; margin-top: 0px; margin-bottom: -1px; padding: 0.2rem; }
+            .post:nth-of-type(even)  {
+              background-color: #dfdfdf;
+            }
             form div, label { margin-bottom: 0; }
             .selectable {
                 -webkit-touch-callout: all;
@@ -64,7 +72,7 @@
                 user-select: all;
             }
             pre { overflow: auto; }
-            table { border:2px solid; }
+            table { border:1px solid; border-collapse: collapse }
             th, td { text-align:left; padding: 2px 7px; border: 1px solid; }
             th { font-weight: bold; }
 
@@ -77,7 +85,7 @@
                 width: 100%;
             }
 
-            body { padding: 2rem; }
+            body { padding: 0.5rem; }
             * { margin-bottom: 1rem; }
 
             .visually-hidden {
@@ -174,23 +182,12 @@
     <body>
         <header>
             <a style="margin-bottom: 0; height: 48px;"  href="/" aria-label='{{ "AriaHome" | translate }}'>
-                {{ dumpLogo }}
+				{{ dumpLogo }}
             </a>
             <nav>
                 <ul type="menu">
 
                 {{ $threads := "Threads" | translate }}
-                {{ if eq .Title $threads }}
-                <li> 
-                    <details>
-                        <summary>{{ "Sort" | translate }}</summary>
-                        <ul>
-                            <li> <a href="/?sort=posts">{{ "SortRecentPosts" | translate }}</a></li>
-                            <li> <a href="/">{{ "SortRecentThreads" | translate }}</a></li>
-                        </ul>
-                    </details>
-                </li>
-                {{ end }}
                     {{ if .QuickNav }}
                     <li><a href="#bottom">{{ "Bottom" | translate }}</a></li>
                     {{end}}

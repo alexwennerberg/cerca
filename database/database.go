@@ -239,12 +239,15 @@ func (d DB) GetPost(postid int) (Post, error) {
 }
 
 type Thread struct {
-	Title   string
-	Author  string
-	Slug    string
-	ID      int
-	Publish time.Time
-	PostID  int
+	Title          string
+	Slug           string
+	ID             int
+	Publish        time.Time
+	PostID         int
+	ReplyCount     int
+	LastPostAuthor string
+	Author         string
+	LastPostSlug   string
 }
 
 // get a list of threads
@@ -252,17 +255,14 @@ type Thread struct {
 // its use and employ Thread.PostID to perform another query for each thread to get the post author name (wrt server.go:GenerateRSS)
 func (d DB) ListThreads(sortByPost bool) []Thread {
 	query := `
-  SELECT count(t.id), t.title, t.id, u.name, p.publishtime, p.id FROM threads t
+  SELECT count(t.id), t.title, t.id, u.name, p.publishtime, p.id, u2.name, max(p.id) FROM threads t
   INNER JOIN users u on u.id = p.authorid
+  INNER JOIN users u2 on u2.id = t.authorid
   INNER JOIN posts p ON t.id = p.threadid
   GROUP BY t.id
   %s
   `
-	orderBy := `ORDER BY t.publishtime DESC`
-	// get a list of threads by ordering them based on most recent post
-	if sortByPost {
-		orderBy = `ORDER BY max(p.id) DESC`
-	}
+	orderBy := `ORDER BY max(p.id) DESC`
 	query = fmt.Sprintf(query, orderBy)
 
 	stmt, err := d.db.Prepare(query)
@@ -276,11 +276,14 @@ func (d DB) ListThreads(sortByPost bool) []Thread {
 	var postCount int
 	var data Thread
 	var threads []Thread
+	var lastPost int
 	for rows.Next() {
-		if err := rows.Scan(&postCount, &data.Title, &data.ID, &data.Author, &data.Publish, &data.PostID); err != nil {
+		if err := rows.Scan(&postCount, &data.Title, &data.ID, &data.LastPostAuthor, &data.Publish, &data.PostID, &data.Author, &lastPost); err != nil {
 			log.Fatalln(util.Eout(err, "list threads: read in data via scan"))
 		}
 		data.Slug = util.GetThreadSlug(data.ID, data.Title, postCount)
+		data.LastPostSlug = fmt.Sprintf("%s#%d", data.Slug, lastPost)
+		data.ReplyCount = postCount - 1
 		threads = append(threads, data)
 	}
 	return threads
