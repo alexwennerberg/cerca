@@ -24,7 +24,7 @@ func HashPassword(s string) (string, error) {
 // TODO (2023-12-05): figure out migration of the password hashes from synacor's embedded salt format to
 // matthewartstonge's key-val embedded format
 
-// migration details: 
+// migration details:
 //
 // the old format had the following default parameters:
 // * time = 1
@@ -34,7 +34,6 @@ func HashPassword(s string) (string, error) {
 // * saltLen = 16 bytes
 // * hashLen = 32 bytes?
 // * argonVersion = 13?
-// 
 //
 // the new format uses the following parameters:
 // *	HashLength:  32, // 32 * 8 = 256-bits
@@ -54,7 +53,7 @@ func HashPassword(s string) (string, error) {
 // $argon2id19$1,65536,4$111111111111111111111111111111111111111111111111111111111111111111
 // diff regex from old to new
 // $argon2id$v=19$m=65536,t=${1},p=4${passwordhash}
-// new format example value: 
+// new format example value:
 // $argon2id$v=19$m=65536,t=3,p=4$222222222222222222222222222222222222222222222222222222222222222222
 func ValidatePasswordHash(password, passwordHash string) bool {
 	ed := util.Describe("validate password hash")

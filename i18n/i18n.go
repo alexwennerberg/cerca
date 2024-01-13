@@ -27,61 +27,59 @@ var English = map[string]string{
 	"SortRecentPosts":   "recent posts",
 	"SortRecentThreads": "most recent threads",
 
-  "modlogResetPassword": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> reset a user's password`,
-  "modlogResetPasswordAdmin": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> reset <b> {{ .Data.RecipientUsername}}</b>'s password`,
-  "modlogRemoveUser": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> removed a user's account`,
-  "modlogMakeAdmin": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> made <b> {{ .Data.RecipientUsername}}</b> an admin`,
-  "modlogAddUser": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> manually registered an account for a new user`,
-  "modlogAddUserAdmin": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> manually registered an account for <b> {{ .Data.RecipientUsername }}</b>`,
-  "modlogDemoteAdmin": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> demoted <b> 
+	"modlogResetPassword":      `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> reset a user's password`,
+	"modlogResetPasswordAdmin": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> reset <b> {{ .Data.RecipientUsername}}</b>'s password`,
+	"modlogRemoveUser":         `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> removed a user's account`,
+	"modlogMakeAdmin":          `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> made <b> {{ .Data.RecipientUsername}}</b> an admin`,
+	"modlogAddUser":            `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> manually registered an account for a new user`,
+	"modlogAddUserAdmin":       `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> manually registered an account for <b> {{ .Data.RecipientUsername }}</b>`,
+	"modlogDemoteAdmin": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> demoted <b> 
 	{{ if eq .Data.ActingUsername .Data.RecipientUsername }} themselves 
 	{{ else }} {{ .Data.RecipientUsername}} {{ end }}</b> from admin back to normal user`,
-	"modlogXProposedY": `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> proposed: {{ .Data.Action }}`,
-	"modlogProposalMakeAdmin": `Make <b> {{ .Data.RecipientUsername}}</b> admin`,
+	"modlogXProposedY":          `<code>{{ .Data.Time }}</code> <b>{{ .Data.ActingUsername }}</b> proposed: {{ .Data.Action }}`,
+	"modlogProposalMakeAdmin":   `Make <b> {{ .Data.RecipientUsername}}</b> admin`,
 	"modlogProposalDemoteAdmin": `Demote <b> {{ .Data.RecipientUsername}}</b> from role admin`,
-	"modlogProposalRemoveUser": `Remove user <b> {{ .Data.RecipientUsername }} </b>`,
-	"modlogConfirm": "{{ .Data.Action }} <i>confirmed by {{ .Data.ActingUsername }}</i>",
-	"modlogVeto": "<s>{{ .Data.Action }}</s> <i>vetoed by {{ .Data.ActingUsername }}</i>",
+	"modlogProposalRemoveUser":  `Remove user <b> {{ .Data.RecipientUsername }} </b>`,
+	"modlogConfirm":             "{{ .Data.Action }} <i>confirmed by {{ .Data.ActingUsername }}</i>",
+	"modlogVeto":                "<s>{{ .Data.Action }}</s> <i>vetoed by {{ .Data.ActingUsername }}</i>",
 
-
-
-	"Admins": "admins",
-	"AdminVeto": "Veto",
-	"AdminConfirm": "Confirm",
-	"AdminForumAdministration": "Forum Administration",
-	"AdminYou": "you!",
-	"AdminUsers": "Users", 
-	"AdminNoAdmins": "There are no admins",
-	"AdminNoUsers": "There are no other users",
-	"AdminNoPendingProposals": "There are no pending proposals",
-	"AdminAddNewUser": "Add new user",
-	"AdminAddNewUserQuestion": "Does someone wish attendence? You can ",
-	"AdminStepDown": "Step down",
-	"AdminStepDownExplanation": "If you want to stop being an admin, you can",
-	"AdminViewPastActions": "View past actions in the",
-	"ModerationLog": "moderation log",
-	"AdminDemote": "Demote",
-	"DeletedUser": "deleted user",
-	"RemoveAccount": "remove account",
-	"AdminMakeAdmin": "Make admin", 
-	"Submit": "Submit",
-	"AdminSelfConfirmationsHover": "a week must pass before self-confirmations are ok",
-	"Proposal": "Proposal",
-	"PendingProposals": "Pending Proposals",
+	"Admins":                        "admins",
+	"AdminVeto":                     "Veto",
+	"AdminConfirm":                  "Confirm",
+	"AdminForumAdministration":      "Forum Administration",
+	"AdminYou":                      "you!",
+	"AdminUsers":                    "Users",
+	"AdminNoAdmins":                 "There are no admins",
+	"AdminNoUsers":                  "There are no other users",
+	"AdminNoPendingProposals":       "There are no pending proposals",
+	"AdminAddNewUser":               "Add new user",
+	"AdminAddNewUserQuestion":       "Does someone wish attendence? You can ",
+	"AdminStepDown":                 "Step down",
+	"AdminStepDownExplanation":      "If you want to stop being an admin, you can",
+	"AdminViewPastActions":          "View past actions in the",
+	"ModerationLog":                 "moderation log",
+	"AdminDemote":                   "Demote",
+	"DeletedUser":                   "deleted user",
+	"RemoveAccount":                 "remove account",
+	"AdminMakeAdmin":                "Make admin",
+	"Submit":                        "Submit",
+	"AdminSelfConfirmationsHover":   "a week must pass before self-confirmations are ok",
+	"Proposal":                      "Proposal",
+	"PendingProposals":              "Pending Proposals",
 	"AdminSelfProposalsBecomeValid": "Date self-proposals become valid",
 	"AdminPendingExplanation": `Two admins are required for <i>making a user an admin</i>, <i>demoting an existing
 															admin</i>, or <i>removing a user</i>. The first proposes the action, the second confirms
 															(or vetos) it. If enough time elapses without a veto, the proposer may confirm their own
 															proposal.`,
-	
-	"AdminAddUserExplanation": "Register a new user account. After registering the account you will be given a generated password and instructions to pass onto the user.",
-	"AdminForumHasAdmins": "The forum currently has the following admins",
-	"AdminOnlyLoggedInMayView": "Only logged in users may view the forum's admins.",
+
+	"AdminAddUserExplanation":          "Register a new user account. After registering the account you will be given a generated password and instructions to pass onto the user.",
+	"AdminForumHasAdmins":              "The forum currently has the following admins",
+	"AdminOnlyLoggedInMayView":         "Only logged in users may view the forum's admins.",
 	"AdminPasswordSuccessInstructions": `Instructions: %s's password was set to: %s. After logging in, please change your password by going to /reset`,
 
-	"ModLogNoActions": "there are no logged moderation actions",
-	"ModLogExplanation": `This resource lists the moderation actions taken by the forum's administrators.`,
-	"ModLogExplanationAdmin": `You are viewing this page as an admin, you will see slightly more details.`,
+	"ModLogNoActions":           "there are no logged moderation actions",
+	"ModLogExplanation":         `This resource lists the moderation actions taken by the forum's administrators.`,
+	"ModLogExplanationAdmin":    `You are viewing this page as an admin, you will see slightly more details.`,
 	"ModLogOnlyLoggedInMayView": "Only logged in users may view the moderation log.",
 
 	"LoginNoAccount":       "Don't have an account yet? <a href='/register'>Register</a> one.",
@@ -140,7 +138,7 @@ var English = map[string]string{
 	"AriaHome":       "Home",
 	"ThreadStartNew": "Start a new thread",
 
-	"RegisterHTMLMessage":               `You now have an account! Welcome. Visit the <a href="/">index</a> to read and reply to threads, or start a new one.`,
+	"RegisterHTMLMessage": `You now have an account! Welcome. Visit the <a href="/">index</a> to read and reply to threads, or start a new one.`,
 
 	"RegisterVerificationCode":              "Your verification code is",
 	"RegisterVerificationInstructionsTitle": "Verification instructions",
@@ -148,8 +146,8 @@ var English = map[string]string{
 	"RegisterConductCodeBoxOne":             `I have refreshed my memory of the <a target="_blank" href="{{ .Data.Link }}">{{ .Data.Name }} Code of Conduct</a>`,
 	"RegisterConductCodeBoxTwo":             `Yes, I have actually <a target="_blank" href="{{ .Data.Link }}">read it</a>`,
 
-	"NewPassword":     "new password",
-	"ChangePassword":  "change password",
+	"NewPassword":    "new password",
+	"ChangePassword": "change password",
 }
 
 var Swedish = map[string]string{
@@ -225,7 +223,7 @@ var Swedish = map[string]string{
 	"AriaHome":       "Hem",
 	"ThreadStartNew": "Starta ny tråd",
 
-	"RegisterHTMLMessage":               `Du har nu ett konto! Välkommen. Besök <a href="/">trådindexet</a> för att läsa och svara på trådar, eller för att starta en ny.`,
+	"RegisterHTMLMessage": `Du har nu ett konto! Välkommen. Besök <a href="/">trådindexet</a> för att läsa och svara på trådar, eller för att starta en ny.`,
 
 	"RegisterVerificationCode":              "Din verifikationskod är",
 	"RegisterVerificationInstructionsTitle": "Verification instructions",
@@ -233,10 +231,10 @@ var Swedish = map[string]string{
 	"RegisterConductCodeBoxOne":             `I have refreshed my memory of the <a target="_blank" href="{{ .Data.Link }}">{{ .Data.Name }} Code of Conduct</a>`,
 	"RegisterConductCodeBoxTwo":             `Yes, I have actually <a target="_blank" href="{{ .Data.Link }}">read it</a>`,
 
-	"PasswordResetDescription":            "På denna sida går vi igenom ett par steg för att säkert nollställa ditt lösenord—utan att behöva ta till mejl!",
-	"PasswordResetUsernameQuestion":       "För de första: hur löd användarnamnet?",
-	"NewPassword":     "nytt lösenord",
-	"ChangePassword":  "ändra lösenord",
+	"PasswordResetDescription":      "På denna sida går vi igenom ett par steg för att säkert nollställa ditt lösenord—utan att behöva ta till mejl!",
+	"PasswordResetUsernameQuestion": "För de första: hur löd användarnamnet?",
+	"NewPassword":                   "nytt lösenord",
+	"ChangePassword":                "ändra lösenord",
 }
 
 var EspanolMexicano = map[string]string{
@@ -311,7 +309,7 @@ var EspanolMexicano = map[string]string{
 	"Responded":             "responded",
 	"YourAnswer":            "Your answer",
 
-	"RegisterHTMLMessage":               `You now have an account! Welcome. Visit the <a href="/">index</a> to read and reply to threads, or start a new one.`,
+	"RegisterHTMLMessage": `You now have an account! Welcome. Visit the <a href="/">index</a> to read and reply to threads, or start a new one.`,
 
 	"RegisterVerificationCode":              "Your verification code is",
 	"RegisterVerificationInstructionsTitle": "Verification instructions",
@@ -319,10 +317,10 @@ var EspanolMexicano = map[string]string{
 	"RegisterConductCodeBoxOne":             `I have refreshed my memory of the <a target="_blank" href="{{ .Data.Link }}">{{ .Data.Name }} Code of Conduct</a>`,
 	"RegisterConductCodeBoxTwo":             `Yes, I have actually <a target="_blank" href="{{ .Data.Link }}">read it</a>`,
 
-	"PasswordResetDescription":            "On this page we'll go through a few steps to securely reset your password—without resorting to any emails!",
-	"PasswordResetUsernameQuestion":       "First up: what was your username?",
-	"NewPassword":     "new password",
-	"ChangePassword":  "change password",
+	"PasswordResetDescription":      "On this page we'll go through a few steps to securely reset your password—without resorting to any emails!",
+	"PasswordResetUsernameQuestion": "First up: what was your username?",
+	"NewPassword":                   "new password",
+	"ChangePassword":                "change password",
 }
 
 var translations = map[string]map[string]string{
