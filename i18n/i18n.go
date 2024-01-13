@@ -14,6 +14,7 @@ var English = map[string]string{
 	"About":    "about",
 	"Login":    "login",
 	"Logout":   "logout",
+	"Reply":    "reply",
 	"Sort":     "sort",
 	"Enter":    "enter",
 	"Register": "register",
