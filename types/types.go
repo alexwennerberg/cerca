@@ -9,6 +9,7 @@ type Config struct {
 		Name        string `json:"name"`
 		ConductLink string `json:"conduct_url"` // optional
 		Language    string `json:"language"`
+		OpenSignups bool `json:"open_signups"`
 	} `json:"general"`
 
 	RSS struct {

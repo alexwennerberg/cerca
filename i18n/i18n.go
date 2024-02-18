@@ -21,6 +21,7 @@ var English = map[string]string{
 	"Bottom":   "bottom",
 	"Name": 	"Name",
 	"Description": "Description",
+	"Reference": "Where did you hear about fishbb?",
 
 	"LoggedIn":    "logged in",
 	"NotLoggedIn": "Not logged in",
@@ -63,6 +64,7 @@ var English = map[string]string{
 	"ModerationLog":                 "moderation log",
 	"AdminDemote":                   "Demote",
 	"DeletedUser":                   "deleted user",
+	"AdminApproveAccount": "Approve Account",
 	"RemoveAccount":                 "remove account",
 	"AdminMakeAdmin":                "Make admin",
 	"Submit":                        "Submit",
@@ -150,7 +152,7 @@ var English = map[string]string{
 	"AriaHome":       "Home",
 	"ThreadStartNew": "Start a new thread",
 
-	"RegisterHTMLMessage": `You now have an account! Welcome. Visit the <a href="/">index</a> to read and reply to threads, or start a new one.`,
+	"RegisterHTMLMessage": `You now have an account! Welcome. Visit the <a href="/">index</a> to read threads.`,
 
 	"RegisterVerificationCode":              "Your verification code is",
 	"RegisterVerificationInstructionsTitle": "Verification instructions",
@@ -330,7 +332,7 @@ var EspanolMexicano = map[string]string{
 	"Responded":             "responded",
 	"YourAnswer":            "Your answer",
 
-	"RegisterHTMLMessage": `You now have an account! Welcome. Visit the <a href="/">index</a> to read and reply to threads, or start a new one.`,
+	"RegisterHTMLMessage": `You now have an account! Welcome. Visit the <a href="/">index</a> to read threads.`,
 
 	"RegisterVerificationCode":              "Your verification code is",
 	"RegisterVerificationInstructionsTitle": "Verification instructions",

@@ -79,12 +79,13 @@
                 <form method="POST">
                 <input type="hidden" name="userid" value="{{$user.ID}}">
                 <tr>
-                    <td>{{ $user.Name }} ({{ $user.ID }})</td>
+                    <td>{{ $user.Name }} ({{ $user.ID }}) {{ if $user.Pending}}<em>*{{$user.Reference}}</em>{{ end }}</td>
                     <td>
                         <select name="admin-action" action="/admin/" id="select-{{$user.ID}}">
                             <option selected value="reset-password">{{ "PasswordReset" | translate | capitalize }}</option>
                             <option value="remove-account">{{ "RemoveAccount" | translate | capitalize }}</option>
                             <option value="make-admin">{{ "AdminMakeAdmin" | translate }}</option>
+                            <option value="approve-account">{{ "AdminApproveAccount" | translate }}</option>
                         </select>
                     </td>
                     <td>

@@ -2,6 +2,8 @@
 <main>
     <h2>{{ .Data.Title }}</h2>
     {{ $userID := .LoggedInID }}
+	{{ $loggedIn := .LoggedIn }}
+	{{ $isApproved := .IsApproved}}
     {{ $threadURL := .Data.ThreadURL }}
     {{ range $index, $post := .Data.Posts }}
     <article id="{{ $post.ID }}" class="post">
@@ -30,10 +32,12 @@
                 {{ end }}
         </section>
         {{ $post.Content | markup }}
+		{{ if and $loggedIn $isApproved }}
 		<a href=".?reply={{$post.ID}}#content">{{ "Reply" | translate}}</a>
+		{{ end }}
     </article>
     {{ end }}
-    {{ if .LoggedIn }}
+    {{ if and .LoggedIn .IsApproved }}
     <section aria-label='{{ "AriaRespondIntoThread" | translate }}'>
         <form method="POST">
             <div id="bottom" class="post-container" >

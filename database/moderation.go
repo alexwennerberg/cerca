@@ -419,6 +419,8 @@ func (d DB) FinalizeProposedAction(proposalid, adminid int, decision bool) (fina
 type User struct {
 	Name string
 	ID   int
+	Pending bool
+	Reference string
 }
 
 func (d DB) AddAdmin(userid int) error {

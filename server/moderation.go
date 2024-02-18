@@ -121,6 +121,19 @@ func performQuorumCheck(ed util.ErrorDescriber, db *database.DB, adminUserId, ta
 	return nil
 }
 
+// approve pending account
+// no quorum required
+func (h *RequestHandler) AdminApprovePendingUser(res http.ResponseWriter, req *http.Request, targetUserID int) {
+	loggedIn, _ := h.IsLoggedIn(req)
+	isAdmin, _ := h.IsAdmin(req)
+	if req.Method == "GET" || !loggedIn || !isAdmin {
+		IndexRedirect(res, req)
+		return
+	}
+	h.db.ApprovePendingUser(targetUserID)
+	http.Redirect(res, req, "/admin", http.StatusFound)
+}
+
 func (h *RequestHandler) AdminRemoveUser(res http.ResponseWriter, req *http.Request, targetUserId int) {
 	ed := util.Describe("Admin remove user")
 	loggedIn, _ := h.IsLoggedIn(req)
@@ -257,7 +270,7 @@ func (h *RequestHandler) AdminManualAddUserRoute(res http.ResponseWriter, req *h
 		newPassword := crypto.GeneratePassword()
 		passwordHash, err := crypto.HashPassword(newPassword)
 		ed.Check(err, "hash password")
-		targetUserId, err := h.db.CreateUser(username, passwordHash)
+		targetUserId, err := h.db.CreateUser(username, passwordHash, "manual-add", false)
 		ed.Check(err, "create new user %s", username)
 
 		err = h.db.AddModerationLog(adminUserId, targetUserId, constants.MODLOG_ADMIN_ADD_USER)
@@ -421,6 +434,8 @@ func (h *RequestHandler) AdminRoute(res http.ResponseWriter, req *http.Request) 
 			h.AdminMakeUserAdmin(res, req, targetUserId)
 		case "remove-account":
 			h.AdminRemoveUser(res, req, targetUserId)
+		case "approve-account":
+			h.AdminApprovePendingUser(res, req, targetUserId)
 		}
 		return
 	}

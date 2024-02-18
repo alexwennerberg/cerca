@@ -61,7 +61,7 @@ func (d DB) makeSureDefaultUsersExist() {
 		}
 		if !userExists {
 			passwordHash, err := crypto.HashPassword(crypto.GeneratePassword())
-			_, err = d.CreateUser(defaultUser, passwordHash)
+			_, err = d.CreateUser(defaultUser, passwordHash, "", false)
 			if err != nil {
 				log.Fatalln(ed.Eout(err, "create %s", defaultUser))
 			}
@@ -82,7 +82,9 @@ func createTables(db *sql.DB) {
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    passwordhash TEXT NOT NULL
+    passwordhash TEXT NOT NULL,
+    reference TEXT,
+    pending BOOL
   );
   `,
 		`
@@ -435,10 +437,12 @@ func (d DB) DeleteTopic(topicid int) {
 	util.Check(err, "deleting topic %d", topicid)
 }
 
-func (d DB) CreateUser(name, hash string) (int, error) {
-	stmt := `INSERT INTO users (name, passwordhash) VALUES (?, ?) RETURNING id`
+// pending will create a user that cannot post until approved
+// by an admin
+func (d DB) CreateUser(name, hash string, reference string, pending bool) (int, error) {
+	stmt := `INSERT INTO users (name, passwordhash, reference, pending) VALUES (?, ?, ?, ?) RETURNING id`
 	var userid int
-	err := d.db.QueryRow(stmt, name, hash).Scan(&userid)
+	err := d.db.QueryRow(stmt, name, hash, reference, pending).Scan(&userid)
 	if err != nil {
 		return -1, util.Eout(err, "creating user %s", name)
 	}
@@ -453,6 +457,17 @@ func (d DB) GetUserID(name string) (int, error) {
 		return -1, util.Eout(err, "get user id")
 	}
 	return userid, nil
+}
+
+func (d DB) GetUserIsApproved(uid int) (bool) {
+	stmt := `SELECT pending FROM users where id = ?`
+	var pending bool
+	err := d.db.QueryRow(stmt, uid).Scan(&pending)
+	if err != nil {
+		// default to true on error TODO
+		return false
+	}
+	return !pending
 }
 
 func (d DB) GetUsername(uid int) (string, error) {
@@ -496,6 +511,12 @@ func (d DB) CheckUsernameExists(username string) (bool, error) {
 	return d.existsQuery(stmt, username)
 }
 
+func (d DB) ApprovePendingUser(userid int) {
+	stmt := `UPDATE users SET pending = false WHERE id = ?`
+	_, err := d.Exec(stmt, userid)
+	util.Check(err, "approving user")
+}
+
 func (d DB) UpdateUserName(userid int, newname string) {
 	stmt := `UPDATE users SET name = ? WHERE id = ?`
 	_, err := d.Exec(stmt, newname, userid)
@@ -537,7 +558,7 @@ func (d DB) AddRegistration(userid int, verificationLink string) error {
 
 func (d DB) GetUsers(includeAdmin bool) []User {
 	ed := util.Describe("get users")
-	query := `SELECT u.name, u.id
+	query := `SELECT u.name, u.id, u.pending, u.reference
   FROM users u 
 	%s
   ORDER BY u.name
@@ -560,7 +581,7 @@ func (d DB) GetUsers(includeAdmin bool) []User {
 	var user User
 	var users []User
 	for rows.Next() {
-		if err := rows.Scan(&user.Name, &user.ID); err != nil {
+		if err := rows.Scan(&user.Name, &user.ID, &user.Pending, &user.Reference); err != nil {
 			ed.Check(err, "scanning loop")
 		}
 		users = append(users, user)

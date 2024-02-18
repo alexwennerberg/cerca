@@ -36,8 +36,10 @@ import (
 type TemplateData struct {
 	Data       interface{}
 	QuickNav   bool
+	// TODO I think I want these three fields together in a struct
 	LoggedIn   bool
 	IsAdmin    bool
+	IsApproved bool
 	HasRSS     bool
 	LoggedInID int
 	ForumName  string
@@ -134,7 +136,7 @@ func (ware *RateLimitingWare) Handler(next http.Handler) http.Handler {
 		portIndex := strings.LastIndex(req.RemoteAddr, ":")
 		ip := req.RemoteAddr[:portIndex]
 		// specific fix in case of using a reverse proxy setup
-		if address, exists := req.Header["X-Real-Ip"]; ip == "127.0.0.1" && exists {
+		if address, exists := req.Header["X-Forwarded-For"]; ip == "127.0.0.1" && exists {
 			ip = address[0]
 		}
 		// rate limiting likely not working as intended on server;
@@ -146,13 +148,6 @@ func (ware *RateLimitingWare) Handler(next http.Handler) http.Handler {
 		if req.Method == "POST" && ware.limiter.IsLimited(ip, req.URL.String()) {
 			res.WriteHeader(429)
 			res.Write([]byte("You are requesting too fast"))
-			return
-		}
-		err := ware.limiter.BlockUntilAllowed(ip, req.URL.String(), req.Context())
-		if err != nil {
-			err = util.Eout(err, "RateLimitingWare")
-			dump(err)
-			http.Error(res, "An error occured", http.StatusInternalServerError)
 			return
 		}
 		next.ServeHTTP(res, req)
@@ -311,6 +306,7 @@ func (h RequestHandler) renderGenericMessage(res http.ResponseWriter, req *http.
 func (h *RequestHandler) ThreadRoute(res http.ResponseWriter, req *http.Request) {
 	threadid, ok := util.GetURLPortion(req, 2)
 	loggedIn, userid := h.IsLoggedIn(req)
+	isApproved := h.db.GetUserIsApproved(userid)
 	isAdmin, _ := h.IsAdmin(req)
 
 	if !ok {
@@ -323,7 +319,7 @@ func (h *RequestHandler) ThreadRoute(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if req.Method == "POST" && loggedIn {
+	if req.Method == "POST" && loggedIn && isApproved {
 		// handle POST (=> add a reply, then show the thread)
 		content := req.PostFormValue("content")
 		// TODO (2022-01-09): make sure rendered content won't be empty after sanitizing:
@@ -364,7 +360,7 @@ func (h *RequestHandler) ThreadRoute(res http.ResponseWriter, req *http.Request)
 			}
 		}
 	}
-	view := TemplateData{Data: &data, IsAdmin: isAdmin, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid, TopicName : thread[0].TopicName}
+	view := TemplateData{Data: &data, IsAdmin: isAdmin, IsApproved: isApproved, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid, TopicName : thread[0].TopicName}
 	if len(thread) > 0 {
 		data.Title = thread[0].ThreadTitle
 		view.Title = data.Title
@@ -396,7 +392,8 @@ func (h RequestHandler) IndexRoute(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h RequestHandler) TopicRoute(res http.ResponseWriter, req *http.Request) {
-	loggedIn, _ := h.IsLoggedIn(req)
+	loggedIn, uid := h.IsLoggedIn(req)
+	isApproved := h.db.GetUserIsApproved(uid)
 	var mostRecentPost bool
 	isAdmin, _ := h.IsAdmin(req)
 	topic := strings.TrimPrefix(req.URL.Path, "/topic/")
@@ -409,7 +406,7 @@ func (h RequestHandler) TopicRoute(res http.ResponseWriter, req *http.Request) {
 	}
 	// show index listing for topic
 	threads := h.db.ListThreads(mostRecentPost, topicid)
-	view := TemplateData{Data: TopicData{topic, threads}, IsAdmin: isAdmin, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("Threads"), TopicName: topic}
+	view := TemplateData{Data: TopicData{topic, threads}, IsAdmin: isAdmin, IsApproved: isApproved, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("Threads"), TopicName: topic}
 	h.renderView(res, "topic", view)
 }
 
@@ -635,9 +632,6 @@ func (h RequestHandler) RegisterRoute(res http.ResponseWriter, req *http.Request
 	var err error
 	switch req.Method {
 	case "GET":
-		// try to get the verification code from the session (useful in case someone refreshed the page)
-		verificationCode, err = h.session.GetVerificationCode(req)
-		// we had an error getting the verification code, generate a code and set it on the session
 		if err != nil {
 			prefix := util.VerificationPrefix(h.config.Community.Name)
 			verificationCode = fmt.Sprintf("%s%06d\n", prefix, crypto.GenerateVerificationCode())
@@ -649,16 +643,16 @@ func (h RequestHandler) RegisterRoute(res http.ResponseWriter, req *http.Request
 		}
 		h.renderView(res, "register", TemplateData{Data: RegisterData{verificationCode, "", rules, verification, conduct}})
 	case "POST":
-		verificationCode, err = h.session.GetVerificationCode(req)
-		if err != nil {
-			renderErr(http.StatusInternalServerError, "There was no verification record for this browser session; missing data to compare against verification link content")
-			return
-		}
+		// verificationCode, err = h.session.GetVerificationCode(req)
+		// if err != nil {
+			// renderErr(http.StatusInternalServerError, "There was no verification record for this browser session; missing data to compare against verification link content")
+			// return
+		// }
 		username := req.PostFormValue("username")
 		password := req.PostFormValue("password")
 		var verificationLink string
 		// skip verification code during dev registering
-		if !developing {
+		if !developing && !h.config.Community.OpenSignups {
 			// read verification code from form
 			verificationLink = req.PostFormValue("verificationlink")
 			// fmt.Printf("user: %s, verilink: %s\n", username, verificationLink)
@@ -704,7 +698,15 @@ func (h RequestHandler) RegisterRoute(res http.ResponseWriter, req *http.Request
 			renderErr(http.StatusBadRequest, "Invalid username")
 			return 
 		}
-		if userID, err = h.db.CreateUser(username, hash); err != nil {
+		// user is pending 
+		pending := h.config.Community.OpenSignups
+		reference := req.PostFormValue("reference")
+		// input validation
+		if len(reference) > 1000 {
+			renderErr(http.StatusBadRequest, "Reference is too long")
+			return
+		}
+		if userID, err = h.db.CreateUser(username, hash, reference, pending); err != nil {
 			renderErr(http.StatusInternalServerError, "Error in db when creating user")
 			return
 		}
@@ -746,6 +748,11 @@ func (h RequestHandler) RobotsRoute(res http.ResponseWriter, req *http.Request) 
 
 func (h *RequestHandler) NewThreadRoute(res http.ResponseWriter, req *http.Request) {
 	loggedIn, userid := h.IsLoggedIn(req)
+	// TODO make better
+	if !h.db.GetUserIsApproved(userid) {
+		// TODO error handling
+		return 
+	}
 	switch req.Method {
 	// Handle GET (=> want to start a new thread)
 	case "GET":
@@ -912,7 +919,7 @@ func Serve(allowlist []string, sessionKey string, isdev bool, dir string, conf t
 	}
 	fmt.Println("Serving forum on", port)
 
-	rateLimitingInstance := NewRateLimitingWare([]string{"/thread/", "/thread/new/", "/login/", "/register/"})
+	rateLimitingInstance := NewRateLimitingWare([]string{"/thread", "/thread/new", "/login", "/register"})
 	limitingMiddleware := rateLimitingInstance.Handler(forum)
 	http.Serve(l, limitingMiddleware)
 }
