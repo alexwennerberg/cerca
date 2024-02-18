@@ -41,6 +41,7 @@ type TemplateData struct {
 	HasRSS     bool
 	LoggedInID int
 	ForumName  string
+	TopicName string
 	Title      string
 }
 
@@ -55,6 +56,11 @@ type ChangePasswordData struct {
 }
 
 type IndexData struct {
+	Topics []database.Topic
+}
+
+type TopicData struct {
+	TopicName string
 	Threads []database.Thread
 }
 
@@ -238,6 +244,7 @@ func generateTemplates(config types.Config, translator i18n.Translator) (*templa
 		"login",
 		"login-component",
 		"new-thread",
+		"topic",
 		"register",
 		"register-success",
 		"thread",
@@ -357,7 +364,7 @@ func (h *RequestHandler) ThreadRoute(res http.ResponseWriter, req *http.Request)
 			}
 		}
 	}
-	view := TemplateData{Data: &data, IsAdmin: isAdmin, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid}
+	view := TemplateData{Data: &data, IsAdmin: isAdmin, QuickNav: loggedIn, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, LoggedInID: userid, TopicName : thread[0].TopicName}
 	if len(thread) > 0 {
 		data.Title = thread[0].ThreadTitle
 		view.Title = data.Title
@@ -382,18 +389,28 @@ func (h RequestHandler) IndexRoute(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	loggedIn, _ := h.IsLoggedIn(req)
+	isAdmin, _ := h.IsAdmin(req)
+	topics := h.db.ListTopics()
+	view := TemplateData{Data: IndexData{topics}, IsAdmin: isAdmin, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("Threads")}
+	h.renderView(res, "index", view)
+}
+
+func (h RequestHandler) TopicRoute(res http.ResponseWriter, req *http.Request) {
+	loggedIn, _ := h.IsLoggedIn(req)
 	var mostRecentPost bool
 	isAdmin, _ := h.IsAdmin(req)
+	topic := strings.TrimPrefix(req.URL.Path, "/topic/")
+	topicid := h.db.GetTopicIDByName(topic)
 
 	params := req.URL.Query()
 	if q, exists := params["sort"]; exists {
 		sortby := q[0]
 		mostRecentPost = sortby == "posts"
 	}
-	// show index listing
-	threads := h.db.ListThreads(mostRecentPost)
-	view := TemplateData{Data: IndexData{threads}, IsAdmin: isAdmin, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("Threads")}
-	h.renderView(res, "index", view)
+	// show index listing for topic
+	threads := h.db.ListThreads(mostRecentPost, topicid)
+	view := TemplateData{Data: TopicData{topic, threads}, IsAdmin: isAdmin, HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("Threads"), TopicName: topic}
+	h.renderView(res, "topic", view)
 }
 
 func IndexRedirect(res http.ResponseWriter, req *http.Request) {
@@ -414,7 +431,7 @@ func GenerateRSS(db *database.DB, config types.Config) string {
 	}
 	// TODO (2022-12-08): augment ListThreads to choose getting author of latest post or thread creator (currently latest
 	// post always)
-	threads := db.ListThreads(true)
+	threads := db.ListThreads(true, 0)
 	entries := make([]string, len(threads))
 	for i, t := range threads {
 		fulltime := t.Publish.Format(rfc822RSS)
@@ -747,6 +764,8 @@ func (h *RequestHandler) NewThreadRoute(res http.ResponseWriter, req *http.Reque
 		}
 		h.renderView(res, "new-thread", TemplateData{HasRSS: h.config.RSS.URL != "", LoggedIn: loggedIn, Title: h.translator.Translate("ThreadNew")})
 	case "POST":
+		topic := strings.TrimPrefix(req.URL.Path, "/thread/new/")
+		topicid := h.db.GetTopicIDByName(topic)
 		// Handle POST (=>
 		title := req.PostFormValue("title")
 		content := req.PostFormValue("content")
@@ -760,7 +779,7 @@ func (h *RequestHandler) NewThreadRoute(res http.ResponseWriter, req *http.Reque
 		}
 		// TODO (2022-01-10): unstub topicid, once we have other topics :)
 		// the new thread was created: forward info to database
-		threadid, err := h.db.CreateThread(title, content, userid, 1)
+		threadid, err := h.db.CreateThread(title, content, userid, topicid)
 		if err != nil {
 			data := GenericMessageData{
 				Title:   h.translator.Translate("NewThreadCreateError"),
@@ -965,6 +984,7 @@ func NewServer(allowlist []string, sessionKey, dir string, config types.Config) 
 	s.ServeMux.HandleFunc("/reset/", handler.ResetPasswordRoute)
 	s.ServeMux.HandleFunc("/admin", handler.AdminRoute)
 	s.ServeMux.HandleFunc("/demote-admin", handler.AdminDemoteAdmin)
+	s.ServeMux.HandleFunc("/new-topic", handler.AdminNewTopicRoute)
 	s.ServeMux.HandleFunc("/add-user", handler.AdminManualAddUserRoute)
 	s.ServeMux.HandleFunc("/moderations", handler.ModerationLogRoute)
 	s.ServeMux.HandleFunc("/proposal-veto", handler.VetoProposal)
@@ -978,6 +998,7 @@ func NewServer(allowlist []string, sessionKey, dir string, config types.Config) 
 	s.ServeMux.HandleFunc("/post/edit/", handler.EditPostRoute)
 	s.ServeMux.HandleFunc("/thread/new/", handler.NewThreadRoute)
 	s.ServeMux.HandleFunc("/thread/", handler.ThreadRoute)
+	s.ServeMux.HandleFunc("/topic/", handler.TopicRoute)
 	s.ServeMux.HandleFunc("/robots.txt", handler.RobotsRoute)
 	s.ServeMux.HandleFunc("/", handler.IndexRoute)
 	s.ServeMux.HandleFunc("/rss/", handler.RSSRoute)

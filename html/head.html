@@ -5,7 +5,7 @@
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <title>{{ .ForumName }} — {{ .Title }}</title>
+		<title>{{ .ForumName }} — {{ .Title }}</title>
 
          <style>
             /* reset */
@@ -183,8 +183,10 @@
     </head>
     <body>
         <header>
-            <a style="margin-bottom: 0; height: 48px;"  href="/" aria-label='{{ "AriaHome" | translate }}'>
-				{{ dumpLogo }}
+			<b><a  href="/">
+					{{ .ForumName }}</a>
+				{{ if .TopicName  }} &gt; <a href="/topic/{{.TopicName}}">{{.TopicName}}{{end}}</a> 
+			</b>
             </a>
             <nav>
                 <ul type="menu">

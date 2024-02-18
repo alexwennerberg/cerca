@@ -98,6 +98,20 @@
         {{ end }}
     </section>
 
+	<section>
+	<h2>Topics</h3>
+	topic management go here<br>
+	<b>New Topic</b>
+	<form method="POST" action="/new-topic">
+		<div class="post-container" >
+			<label for="name">{{ "Name" | translate }}:</label>
+			<input required name="name" type="text" id="name">
+			<label for="description">{{ "Description" | translate }}:</label>
+			<textarea required name="description" id="description" placeholder='{{ "TextareaPlaceholder" | translate }}'></textarea>
+			<button type="submit">{{ "Create" | translate }}</button>
+		</div>
+	</form>
+</section>
     {{ end }}
 </main>
 {{ template "footer" . }}

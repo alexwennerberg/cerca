@@ -225,6 +225,7 @@ func (d DB) CreateThread(title, content string, authorid, topicid int) (int, err
 // type NullTime sql.NullTime
 type Post struct {
 	ID          int
+	TopicName   string
 	ThreadTitle string
 	ThreadID    int
 	Content     string // markdown
@@ -258,10 +259,11 @@ func (d DB) GetThread(threadid int) []Post {
 	//    users table to get user name
 	//    threads table to get thread title
 	query := `
-  SELECT p.id, t.title, content, u.name, p.authorid, p.publishtime, p.lastedit
+  SELECT p.id, t.title, content, u.name, p.authorid, p.publishtime, p.lastedit, top.name
   FROM posts p 
   INNER JOIN users u ON u.id = p.authorid 
   INNER JOIN threads t ON t.id = p.threadid
+  INNER JOIN topics top ON t.topicid = top.id
   WHERE threadid = ? 
   ORDER BY p.publishtime
   `
@@ -276,7 +278,7 @@ func (d DB) GetThread(threadid int) []Post {
 	var data Post
 	var posts []Post
 	for rows.Next() {
-		if err := rows.Scan(&data.ID, &data.ThreadTitle, &data.Content, &data.Author, &data.AuthorID, &data.Publish, &data.LastEdit); err != nil {
+		if err := rows.Scan(&data.ID, &data.ThreadTitle, &data.Content, &data.Author, &data.AuthorID, &data.Publish, &data.LastEdit, &data.TopicName); err != nil {
 			log.Fatalln(util.Eout(err, "get data for thread %d", threadid))
 		}
 		posts = append(posts, data)
@@ -310,20 +312,32 @@ type Thread struct {
 	LastPostSlug   string
 }
 
+type Topic struct {
+	ID int
+	Name string
+	Description string
+	SuperTopic string // Optional grouping of "super topics" for a classic forum look
+}
+
 // get a list of threads
 // NOTE: this query is setting thread.Author not by thread creator, but latest poster. if this becomes a problem, revert
 // its use and employ Thread.PostID to perform another query for each thread to get the post author name (wrt server.go:GenerateRSS)
-func (d DB) ListThreads(sortByPost bool) []Thread {
+// 0 to list any topic
+func (d DB) ListThreads(sortByPost bool, topic int) []Thread {
 	query := `
   SELECT count(t.id), t.title, t.id, u.name, p.publishtime, p.id, u2.name, max(p.id) FROM threads t
   INNER JOIN users u on u.id = p.authorid
   INNER JOIN users u2 on u2.id = t.authorid
   INNER JOIN posts p ON t.id = p.threadid
-  GROUP BY t.id
   %s
+  GROUP BY t.id
+	ORDER BY max(p.id) DESC
   `
-	orderBy := `ORDER BY max(p.id) DESC`
-	query = fmt.Sprintf(query, orderBy)
+  var topicFilter string
+	if topic != 0 {
+		topicFilter = fmt.Sprintf(`WHERE topicid = %d`, topic)
+	}
+	query = fmt.Sprintf(query, topicFilter)
 
 	stmt, err := d.db.Prepare(query)
 	util.Check(err, "list threads: prepare query")
@@ -368,6 +382,33 @@ func (d DB) DeletePost(postid int) error {
 	stmt := `DELETE FROM posts WHERE id = ?`
 	_, err := d.Exec(stmt, postid)
 	return util.Eout(err, "deleting post %d", postid)
+}
+
+func (d DB) ListTopics() []Topic {
+	ed := util.Describe("list topics")
+	query := `SELECT id,name,description from topics`
+	stmt, err := d.db.Prepare(query)
+	ed.Check(err, "prepare query")
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+	ed.Check(err, "query")
+	defer rows.Close()
+	var topic Topic
+	var topics []Topic
+	for rows.Next() {
+		err := rows.Scan(&topic.ID, &topic.Name, &topic.Description)
+		ed.Check(err, "scanning loop")
+		topics = append(topics, topic)
+	}
+	return topics
+}
+
+func (d DB) GetTopicIDByName(name string) int {
+	stmt := `SELECT id from topics where name = (?)`
+	var i int 
+	d.db.QueryRow(stmt, name).Scan(&i)
+	return  i
 }
 
 func (d DB) CreateTopic(title, description string) {

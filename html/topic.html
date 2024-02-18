@@ -1,0 +1,28 @@
+{{ template "head" . }}
+{{ if .LoggedIn }}
+<aside>
+	<p> <a style="float: right;" href="/thread/new/{{.Data.TopicName}}">{{ "ThreadStartNew" | translate }}</a></p>
+</aside>
+{{ end }}
+
+<main>
+	<h1>{{.Data.TopicName}}</h1>
+  <table id="threads">
+    <tr>
+      <th>Thread</th>
+      <th>Author</th>
+	  <th>Replies</th>
+      <th>Latest</th>
+    </tr>
+	{{ range $index, $thread := .Data.Threads }}
+    <tr>
+      <td><b><a href="{{$thread.Slug}}">{{ $thread.Title }}</a></b>
+      </td>
+	  <td>{{$thread.Author}}</td>
+      <td>{{$thread.ReplyCount}}</td>
+      <td>{{$thread.LastPostAuthor}} <a href="{{$thread.LastPostSlug}}">{{$thread.Publish | formatDateTimeRelative }} </a></td>
+	{{ end }}
+  </table>
+  {{ if not .Data.Threads }}<tr>No threads to list. Be the first to create one!{{ end }}</tr>
+</main>
+{{ template "footer" . }}

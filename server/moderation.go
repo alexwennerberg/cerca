@@ -170,6 +170,20 @@ func (h *RequestHandler) AdminMakeUserAdmin(res http.ResponseWriter, req *http.R
 	}
 }
 
+func (h *RequestHandler) AdminNewTopicRoute(res http.ResponseWriter, req *http.Request) {
+	loggedIn, _ := h.IsLoggedIn(req)
+	isAdmin, _ := h.IsAdmin(req)
+	if req.Method == "GET" || !loggedIn || !isAdmin {
+		IndexRedirect(res, req)
+		return
+	}
+	title := h.translator.Translate("NewTopic")
+	name := req.PostFormValue("name")
+	description := req.PostFormValue("description")
+	h.db.CreateTopic(name, description)
+	h.displaySuccess(res, req, title, "topic created", "/admin")
+}
+
 func (h *RequestHandler) AdminDemoteAdmin(res http.ResponseWriter, req *http.Request) {
 	ed := util.Describe("demote admin route")
 	loggedIn, _ := h.IsLoggedIn(req)
