@@ -7,10 +7,10 @@ import (
 )
 
 const maxContentLength = 10000
-const maxThreadTitle = 250
-// username must consist of lowercase (or non-case) letters, digits, or the
+const maxThreadTitle = 100
+// username must consist of letters, digits, or the
 // symbols _ and -; unicode OK
-const usernameRegex = `^[\p{Ll}\p{Lo}\pN_-]{1,16}$`
+const usernameRegex = `^[\pL\pN_-]{1,16}$`
 
 func validateContent(c string) error {
 	if len(c) > maxContentLength {
