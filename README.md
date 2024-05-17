@@ -1,7 +1,7 @@
 # Cerca
 _a forum software_
 
-** My fork -- Unstable, constantly changing. Visible on fishbb.nyc **
+** My fork -- Unstable, constantly changing. Visible on https://fishbb.nyc **
 
 Meaning:
 * to search, quest, run _(it)_
